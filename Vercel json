@@ -1,0 +1,107 @@
+# ⚡ ደሴ ማርት (Dessie Mart / ሙጋድ ገበያ) — ይፋዊ የ `vercel.json` ፋይል እና የኮንፊገሬሽን መመሪያ
+
+ለ**ደሴ ማርት (Dessie Mart / ሙጋድ ገበያ)** በ **Vercel** ላይ ሲሰማራ (Deploy ሲደረግ)፦
+1. **Service Worker (`sw.js`)** ያለምንም አላስፈላጊ የካሼ መዘግየት ሁልጊዜ የቅርብ ጊዜውን ኮድ እንዲያገኝ፣
+2. **`manifest.json`** ትክክለኛውን PWA መለያ ሄደር ይዞ እንዲቀርብ፣
+3. **`assetlinks.json`** ለ Google Play TWA ማረጋገጫ በ `application/json` እና ክፍት CORS ሄደር እንዲስተናገድ፣
+4. ንጹህ ዩአርኤል (Clean URLs) እና የ Single Page App / PWA አቅጣጫ ማስቀየሪያ (Rewrites) እንዲኖረው የሚያስችል የተሟላ የ **`vercel.json`** ፋይል ተዘጋጅቷል።
+
+---
+
+## 🛠️ 1. የፋይሉ አቀማመጥ (File Location)
+ይህንን ፋይል በፕሮጀክትዎ ዋና ማውጫ (Root Directory) ውስጥ ያስቀምጡት፦
+```plaintext
+dessie-mart/vercel.json
+```
+
+---
+
+## 💻 2. የተሟላ የ `vercel.json` ምንጭ ኮድ (Source Code)
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json; charset=utf-8"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/offline",
+      "destination": "/offline.html"
+    }
+  ]
+}
+```
+
+---
+
+## 🔍 3. በ `vercel.json` ውስጥ የተካተቱ ቁልፍ ክፍሎች ማብራሪያ፦
+
+| ክፍል (Section) | ጥቅም እና አሰራር (Purpose) |
+|---|---|
+| **`"cleanUrls": true`** | የፋይል ቅጥያዎችን (ለምሳሌ፦ `.html`) ከዩአርኤል በማስወገድ ንጹህ አድራሻ (ለምሳሌ፦ `/post` ፋንታ `/post.html`) ያደርጋል። |
+| **`/sw.js` Headers** | ሰርቪስ ወርከሩ በአሮጌ ካሼ (Stale Cache) እንዳይታገድ `max-age=0` እና መላውን ሳይት መቆጣጠር እንዲችል `Service-Worker-Allowed: /` ያደርገዋል። |
+| **`/.well-known/assetlinks.json`** | ጎግል እና አንድሮይድ ሲስተም የዶሜይን ባለቤትነትን ሲያረጋግጡ የ CORS ስህተት እንዳይገጥማቸው `Access-Control-Allow-Origin: *` ይሰጣል። |
+| **`/manifest.json`** | በብሮውዘሮች ዘንድ ወዲያውኑ የ PWA መጫኛ ጥሪ (Install Prompt) እንዲያሳይ ትክክለኛውን `application/manifest+json` ማይሜ ታይፕ ይሰጣል። |
+| **`/assets/(.*)` Caching** | አዶዎች፣ ፎቶዎች እና ሎጎዎች በ Vercel Global Edge CDN ላይ ለ 1 ዓመት ተቀምጠው መተግበሪያው በቅጽበት እንዲከፈት ያደርጋል። |
